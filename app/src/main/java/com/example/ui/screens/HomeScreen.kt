@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FilterList
@@ -263,8 +264,8 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 FloatingActionButton(onClick = onServerManagementClick) {
                     Icon(
-                        Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_server)
+                        if (servers.isEmpty()) Icons.Default.Add else Icons.Default.Edit,
+                        contentDescription = if (servers.isEmpty()) "Add server" else "Edit servers"
                     )
                 }
             }
