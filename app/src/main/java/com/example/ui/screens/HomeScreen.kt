@@ -20,6 +20,7 @@ package com.example.ui.screens
 import android.app.Activity
 import android.net.VpnService
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
@@ -71,7 +72,6 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: AppViewModel,
     onServerManagementClick: () -> Unit,
-    onAboutClick: () -> Unit,
     onLogClick: () -> Unit,
     onAdvancedSettingsClick: () -> Unit,
     onPerAppSplitTunClick: () -> Unit,
@@ -129,6 +129,10 @@ fun HomeScreen(
     val killSwitchEnabled by viewModel.killSwitchEnabled.collectAsStateWithLifecycle()
     val fakeIpEnabled by viewModel.fakeIpEnabled.collectAsStateWithLifecycle()
 
+    BackHandler(enabled = drawerState.isOpen) {
+        scope.launch { drawerState.close() }
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -149,7 +153,6 @@ fun HomeScreen(
                     label = {
                         Column {
                             Text(stringResource(R.string.kill_switch))
-                            Text(stringResource(R.string.kill_switch_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
                     badge = {
@@ -164,7 +167,6 @@ fun HomeScreen(
                     label = {
                         Column {
                             Text(stringResource(R.string.fake_ip_dns))
-                            Text(stringResource(R.string.fake_ip_dns_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
                     badge = {
@@ -214,16 +216,42 @@ fun HomeScreen(
                     },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Info, contentDescription = null) },
-                    label = { Text(stringResource(R.string.about)) },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        onAboutClick()
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Based on Abdal 4iProto",
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = "by Ebrahim Shafiei (EbraSha)",
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = "License: GNU AGPLv3",
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = "github.com/ebrasha/abdal-4iproto-client-android",
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        modifier = Modifier.clickable {
+                            val intent = android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse("https://github.com/ebrasha/abdal-4iproto-client-android")
+                            )
+                            context.startActivity(intent)
+                        }
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
             }
         }
     ) {
@@ -236,150 +264,142 @@ fun HomeScreen(
                             Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.drawer_menu))
                         }
                     },
-                    actions = {
-                        IconButton(onClick = onAboutClick) {
-                            Icon(
-                                Icons.Default.Info,
-                                contentDescription = stringResource(R.string.about)
-                            )
-                        }
-                    },
                 )
             },
-        floatingActionButton = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                SmallFloatingActionButton(
-                    onClick = onLogClick,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.List,
-                        contentDescription = stringResource(R.string.view_logs)
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                FloatingActionButton(onClick = onServerManagementClick) {
-                    Icon(
-                        if (servers.isEmpty()) Icons.Default.Add else Icons.Default.Edit,
-                        contentDescription = if (servers.isEmpty()) "Add server" else "Edit servers"
-                    )
-                }
-            }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .drawBehind {
-                        if (vpnState == VpnState.CONNECTED) {
-                            val currentRadius = (size.width / 2f) + (60.dp.toPx() * haloAnim)
-                            val alpha = (1f - haloAnim) * 0.4f
-                            drawCircle(
-                                color = Color(0xFF4CAF50).copy(alpha = alpha),
-                                radius = currentRadius
-                            )
-                        }
+            floatingActionButton = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    SmallFloatingActionButton(
+                        onClick = onLogClick,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.List,
+                            contentDescription = stringResource(R.string.view_logs)
+                        )
                     }
-                    .clip(CircleShape)
-                    .background(buttonBgColor)
-                    .clickable {
-                        when {
-                            selectedServer == null -> {
-                                viewModel.reportNoServerSelected()
-                            }
-                            vpnState == VpnState.CONNECTED || vpnState == VpnState.CONNECTING -> {
-                                viewModel.toggleVpn(context, selectedServer!!)
-                            }
-                            else -> {
-                                val intent = VpnService.prepare(context)
-                                if (intent != null) {
-                                    vpnLauncher.launch(intent)
-                                } else {
-                                    viewModel.toggleVpn(context, selectedServer!!)
-                                }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FloatingActionButton(onClick = onServerManagementClick) {
+                        Icon(
+                            if (servers.isEmpty()) Icons.Default.Add else Icons.Default.Edit,
+                                                                          contentDescription = if (servers.isEmpty()) "Add server" else "Edit servers"
+                        )
+                    }
+                }
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(40.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(200.dp)
+                        .drawBehind {
+                            if (vpnState == VpnState.CONNECTED) {
+                                val currentRadius = (size.width / 2f) + (60.dp.toPx() * haloAnim)
+                                val alpha = (1f - haloAnim) * 0.4f
+                                drawCircle(
+                                    color = Color(0xFF4CAF50).copy(alpha = alpha),
+                                    radius = currentRadius
+                                )
                             }
                         }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.PowerSettingsNew,
-                    contentDescription = stringResource(R.string.connect),
-                    modifier = Modifier.size(100.dp),
-                    tint = Color.White
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = when (vpnState) {
-                    VpnState.DISCONNECTED -> stringResource(R.string.status_disconnected)
-                    VpnState.CONNECTING -> stringResource(R.string.status_connecting)
-                    VpnState.CONNECTED -> stringResource(R.string.status_connected)
-                    VpnState.ERROR -> stringResource(R.string.status_error)
-                },
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = buttonBgColor
-            )
-
-            if (vpnState == VpnState.ERROR && !errorMessage.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            Text(
-                text = stringResource(R.string.select_server),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.align(Alignment.Start)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (servers.isEmpty()) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
+                        .clip(CircleShape)
+                        .background(buttonBgColor)
+                        .clickable {
+                            when {
+                                selectedServer == null -> {
+                                                              viewModel.reportNoServerSelected()
+                                                          }
+                                                          vpnState == VpnState.CONNECTED || vpnState == VpnState.CONNECTING -> {
+                                                                                                                                   viewModel.toggleVpn(context, selectedServer!!)
+                                                                                                                               }
+                                else -> {
+                                            val intent = VpnService.prepare(context)
+                                            if (intent != null) {
+                                                vpnLauncher.launch(intent)
+                                            } else {
+                                                viewModel.toggleVpn(context, selectedServer!!)
+                                            }
+                                        }
+                            }
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
+                    Icon(
+                        Icons.Default.PowerSettingsNew,
+                        contentDescription = stringResource(R.string.connect),
+                        modifier = Modifier.size(100.dp),
+                        tint = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = when (vpnState) {
+                        VpnState.DISCONNECTED -> stringResource(R.string.status_disconnected)
+                        VpnState.CONNECTING -> stringResource(R.string.status_connecting)
+                        VpnState.CONNECTED -> stringResource(R.string.status_connected)
+                        VpnState.ERROR -> stringResource(R.string.status_error)
+                    },
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = buttonBgColor
+                )
+
+                if (vpnState == VpnState.ERROR && !errorMessage.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = stringResource(R.string.no_servers),
-                        modifier = Modifier.padding(16.dp),
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
                 }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(servers) { server ->
-                        ServerItem(
-                            server = server,
-                            isSelected = server.id == selectedServer?.id,
-                            onClick = { viewModel.selectServer(server) }
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                Text(
+                    text = stringResource(R.string.select_server),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (servers.isEmpty()) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_servers),
+                            modifier = Modifier.padding(16.dp),
+                            textAlign = TextAlign.Center
                         )
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(servers) { server ->
+                            ServerItem(
+                                server = server,
+                                isSelected = server.id == selectedServer?.id,
+                                onClick = { viewModel.selectServer(server) }
+                            )
+                        }
                     }
                 }
             }
         }
     }
-}
 }
 
 @Composable

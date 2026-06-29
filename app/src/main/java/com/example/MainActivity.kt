@@ -16,7 +16,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.ui.AppViewModel
-import com.example.ui.screens.AboutScreen
 import com.example.ui.screens.AddServerScreen
 import com.example.ui.screens.AdvancedSettingsScreen
 import com.example.ui.screens.EditServerScreen
@@ -53,12 +52,6 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel,
                                 onServerManagementClick = {
                                     navController.navigate("server_management") {
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
-                                onAboutClick = {
-                                    navController.navigate("about") {
                                         launchSingleTop = true
                                         restoreState = true
                                     }
@@ -123,11 +116,6 @@ class MainActivity : ComponentActivity() {
                                     onBackClick = { navController.popBackStack() }
                                 )
                             }
-                        }
-                        composable("about") {
-                            AboutScreen(
-                                onBackClick = { navController.popBackStack() }
-                            )
                         }
                         composable("logs") {
                             LogScreen(
