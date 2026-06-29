@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,6 +15,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
@@ -54,6 +56,11 @@ fun EditServerScreen(
         }
     }
 
+    fun copyToClipboard() {
+        val data = "$name\n$ip\n$port\n$username\n$password"
+        clipboardManager.setText(AnnotatedString(data))
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -67,6 +74,9 @@ fun EditServerScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { copyToClipboard() }) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy server data")
+                    }
                     IconButton(onClick = { pasteFromClipboard() }) {
                         Icon(Icons.Default.ContentPaste, contentDescription = "Paste from clipboard")
                     }
