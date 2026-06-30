@@ -53,7 +53,6 @@ class AbdalVpnService : VpnService() {
     private var vpnInterface: ParcelFileDescriptor? = null
     private var session: Session? = null
     private var socksProxy: SshSocksProxy? = null
-    private var udpTunnel: SshUdpTunnel? = null
     private var connectJob: Job? = null
     private var reconnectJob: Job? = null
     private var monitorJob: Job? = null
@@ -240,16 +239,11 @@ class AbdalVpnService : VpnService() {
                 } else {
                     null
                 }
-                // Read the UDP tunnel settings once: the same switch enables transparent all-UDP routing
-                // (via the SOCKS proxy) and the fixed local-port UDP forwarder.
-                val udpConfig = UdpTunnelConfig.fromPreferences(this@AbdalVpnService)
-                val proxy = SshSocksProxy(sshSession, fakeDns, udpConfig.enabled) { failure ->
+                val proxy = SshSocksProxy(sshSession, fakeDns) { failure ->
                     handleUnexpectedSessionFailure(failure)
                 }
                 val socksPort = proxy.start()
                 socksProxy = proxy
-
-                startUdpTunnelIfEnabled(sshSession, udpConfig)
 
                 val tunFd = establishVpn()
                     ?: throw IllegalStateException("VPN interface could not be established")
@@ -476,27 +470,6 @@ class AbdalVpnService : VpnService() {
         }
         TunnelLogger.info(TAG, "Starting tunnel engine -> SOCKS5 127.0.0.1:$socksPort")
         HevSocksTunnel.start(this, tunFd, socksPort)
-    }
-
-    /**
-     * Starts the Abdal 4iProto UDP-over-SSH tunnel when the user has enabled it. A UDP tunnel failure
-     * is isolated: it never aborts the main TCP tunnel, but if it detects the SSH session is down it
-     * funnels into the shared reconnect path.
-     */
-    private fun startUdpTunnelIfEnabled(sshSession: Session, udpConfig: UdpTunnelConfig) {
-        if (!udpConfig.enabled) {
-            return
-        }
-        try {
-            val tunnel = SshUdpTunnel(sshSession, udpConfig) { failure ->
-                handleUnexpectedSessionFailure(failure)
-            }
-            tunnel.start()
-            udpTunnel = tunnel
-        } catch (e: Exception) {
-            TunnelLogger.warn(TAG, "UDP tunnel disabled for this session due to startup error", e)
-            udpTunnel = null
-        }
     }
 
     private fun establishVpn(): ParcelFileDescriptor? {
@@ -727,11 +700,6 @@ class AbdalVpnService : VpnService() {
             TunnelLogger.warn(TAG, "Error stopping tunnel engine", e)
         }
         try {
-            udpTunnel?.stop()
-        } catch (e: Exception) {
-            TunnelLogger.warn(TAG, "Error stopping UDP tunnel", e)
-        }
-        try {
             socksProxy?.stop()
         } catch (e: Exception) {
             TunnelLogger.warn(TAG, "Error stopping SOCKS proxy", e)
@@ -742,7 +710,6 @@ class AbdalVpnService : VpnService() {
             TunnelLogger.warn(TAG, "Error disconnecting SSH", e)
         }
 
-        udpTunnel = null
         socksProxy = null
         session = null
     }

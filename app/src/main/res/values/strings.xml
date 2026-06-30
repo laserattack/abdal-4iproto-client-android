@@ -45,15 +45,6 @@
     <string name="settings_saved">Settings saved successfully</string>
     <string name="edit_server">Edit Server</string>
     <string name="update_server">Update Server</string>
-    <string name="udp_tunnel">UDP Tunnel</string>
-    <string name="udp_tunnel_desc">Routes UDP traffic over the SSH tunnel</string>
-    <string name="keepalive_interval">Keepalive Interval (seconds)</string>
-    <string name="socket_buffer">Socket Buffer (KB / size > 0)</string>
-    <string name="read_buffer_size">Read Buffer Size (1 - 65535)</string>
-    <string name="bind_address">Bind Address (IPv4)</string>
-    <string name="local_udp_port">Local UDP Port (0 - 65535)</string>
-    <string name="target_host">Target Host (IPv4)</string>
-    <string name="target_port">Target Port (1 - 65535)</string>
     <string name="vpn_active_title">VPN Active</string>
     <string name="vpn_active_message">Please disconnect VPN first to change settings</string>
     <string name="attribution_based_on">Based on Abdal 4iProto</string>

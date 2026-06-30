@@ -75,7 +75,6 @@ fun HomeScreen(
     onLogClick: () -> Unit,
     onAdvancedSettingsClick: () -> Unit,
     onPerAppSplitTunClick: () -> Unit,
-    onUdpTunnelClick: () -> Unit
 ) {
     val context = LocalContext.current
     val servers by viewModel.allServers.collectAsStateWithLifecycle()
@@ -222,20 +221,6 @@ fun HomeScreen(
                         } else {
                             scope.launch { drawerState.close() }
                             onPerAppSplitTunClick()
-                        }
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Share, contentDescription = null) },
-                    label = { Text(stringResource(R.string.udp_tunnel)) },
-                    selected = false,
-                    onClick = {
-                        if (isVpnActive()) {
-                            showVpnActiveDialog = true
-                        } else {
-                            scope.launch { drawerState.close() }
-                            onUdpTunnelClick()
                         }
                     },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)

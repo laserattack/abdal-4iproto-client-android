@@ -74,12 +74,6 @@ class MainActivity : ComponentActivity() {
                                         restoreState = true
                                     }
                                 },
-                                onUdpTunnelClick = {
-                                    navController.navigate("udp_tunnel") {
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
                             )
                         }
                         composable("server_management") {
@@ -132,13 +126,6 @@ class MainActivity : ComponentActivity() {
                             val perAppViewModel: com.example.ui.PerAppViewModel by viewModels()
                             com.example.ui.screens.PerAppSplitTunScreen(
                                 viewModel = perAppViewModel,
-                                onBackClick = { navController.popBackStack() }
-                            )
-                        }
-                        composable("udp_tunnel") {
-                            val udpViewModel: com.example.ui.UdpViewModel by viewModels()
-                            com.example.ui.screens.UdpTunnelScreen(
-                                viewModel = udpViewModel,
                                 onBackClick = { navController.popBackStack() }
                             )
                         }
