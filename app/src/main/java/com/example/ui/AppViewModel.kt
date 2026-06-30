@@ -66,13 +66,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         prefs.edit().putBoolean("kill_switch", enabled).apply()
     }
 
-    private val _fakeIpEnabled = kotlinx.coroutines.flow.MutableStateFlow(prefs.getBoolean("fake_ip", true))
-    val fakeIpEnabled: StateFlow<Boolean> = _fakeIpEnabled
-    fun setFakeIp(enabled: Boolean) {
-        _fakeIpEnabled.value = enabled
-        prefs.edit().putBoolean("fake_ip", enabled).apply()
-    }
-
     private val _whitelistIps = kotlinx.coroutines.flow.MutableStateFlow(prefs.getString("whitelist_ips", "") ?: "")
     val whitelistIps: StateFlow<String> = _whitelistIps
     fun setWhitelistIps(ips: String) {
@@ -155,7 +148,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 putExtra(AbdalVpnService.EXTRA_PORT, server.port)
                 putExtra(AbdalVpnService.EXTRA_USERNAME, server.username)
                 putExtra(AbdalVpnService.EXTRA_PASSWORD, server.password)
-                putExtra(AbdalVpnService.EXTRA_FAKE_IP, _fakeIpEnabled.value)
                 putExtra(AbdalVpnService.EXTRA_KILL_SWITCH, _killSwitchEnabled.value)
                 putExtra(AbdalVpnService.EXTRA_WHITELIST, _whitelistIps.value)
             }

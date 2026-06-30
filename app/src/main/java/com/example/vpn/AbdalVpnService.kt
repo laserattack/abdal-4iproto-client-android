@@ -73,7 +73,6 @@ class AbdalVpnService : VpnService() {
         val port: Int,
         val username: String,
         val password: String,
-        val fakeIp: Boolean,
         val killSwitch: Boolean
     )
 
@@ -87,7 +86,6 @@ class AbdalVpnService : VpnService() {
         const val EXTRA_PORT = "EXTRA_PORT"
         const val EXTRA_USERNAME = "EXTRA_USERNAME"
         const val EXTRA_PASSWORD = "EXTRA_PASSWORD"
-        const val EXTRA_FAKE_IP = "EXTRA_FAKE_IP"
         const val EXTRA_KILL_SWITCH = "EXTRA_KILL_SWITCH"
         const val EXTRA_WHITELIST = "EXTRA_WHITELIST"
 
@@ -164,10 +162,9 @@ class AbdalVpnService : VpnService() {
                 }
                 val port = intent.getIntExtra(EXTRA_PORT, 22)
                 val password = intent.getStringExtra(EXTRA_PASSWORD).orEmpty()
-                val fakeIp = intent.getBooleanExtra(EXTRA_FAKE_IP, false)
                 val killSwitch = intent.getBooleanExtra(EXTRA_KILL_SWITCH, false)
                 whitelistRanges = parseWhitelist(intent.getStringExtra(EXTRA_WHITELIST).orEmpty())
-                val config = ConnectionConfig(ip, port, username, password, fakeIp, killSwitch)
+                val config = ConnectionConfig(ip, port, username, password, killSwitch)
 
                 activeConfig = config
                 reconnectAttempts = 0
@@ -233,13 +230,7 @@ class AbdalVpnService : VpnService() {
                 session = sshSession
                 TunnelLogger.info(TAG, "SSH session established")
 
-                val fakeDns = if (config.fakeIp) {
-                    TunnelLogger.info(TAG, "Fake-IP/FakeDNS enabled: domains are resolved on the SSH server")
-                    FakeDnsResolver()
-                } else {
-                    null
-                }
-                val proxy = SshSocksProxy(sshSession, fakeDns) { failure ->
+                val proxy = SshSocksProxy(sshSession) { failure ->
                     handleUnexpectedSessionFailure(failure)
                 }
                 val socksPort = proxy.start()

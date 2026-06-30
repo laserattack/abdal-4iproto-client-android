@@ -132,7 +132,6 @@ fun HomeScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val killSwitchEnabled by viewModel.killSwitchEnabled.collectAsStateWithLifecycle()
-    val fakeIpEnabled by viewModel.fakeIpEnabled.collectAsStateWithLifecycle()
 
     BackHandler(enabled = drawerState.isOpen) {
         scope.launch { drawerState.close() }
@@ -173,26 +172,6 @@ fun HomeScreen(
                             showVpnActiveDialog = true
                         } else {
                             viewModel.setKillSwitch(!killSwitchEnabled)
-                        }
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Dns, contentDescription = null) },
-                    label = {
-                        Column {
-                            Text(stringResource(R.string.fake_ip_dns))
-                        }
-                    },
-                    badge = {
-                        Switch(checked = fakeIpEnabled, onCheckedChange = null)
-                    },
-                    selected = false,
-                    onClick = {
-                        if (isVpnActive()) {
-                            showVpnActiveDialog = true
-                        } else {
-                            viewModel.setFakeIp(!fakeIpEnabled)
                         }
                     },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)

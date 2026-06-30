@@ -6,7 +6,6 @@ SSH-based VPN for Android. Device-wide tunneling, no root required
 
 - Full device VPN over SSH
 - Kill Switch
-- Private DNS
 - Split tunneling
 - Auto-reconnect
 - Multiple servers

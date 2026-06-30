@@ -35,8 +35,6 @@
     <string name="server_management">Server Management</string>
     <string name="kill_switch">Block Internet on VPN Drop</string>
     <string name="kill_switch_desc">Enable Kill Switch to block internet traffic if the VPN tunnel disconnects</string>
-    <string name="fake_ip_dns">DNS via VPN</string>
-    <string name="fake_ip_dns_desc">Routes domains securely through the tunnel by assigning fake IPs</string>
     <string name="advanced_settings">Advanced Settings</string>
     <string name="whitelist_ips_title">Whitelist IPs / CIDR</string>
     <string name="whitelist_ips_desc">Enter IP addresses or CIDR blocks to bypass the VPN tunnel (comma separated)</string>

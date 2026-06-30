@@ -44,7 +44,6 @@ import java.util.concurrent.atomic.AtomicLong
  */
 class SshSocksProxy(
     private val session: Session,
-    private val fakeDns: FakeDnsResolver? = null,
     private val transparentUdp: Boolean = false,
     private val onSessionFailure: (Throwable) -> Unit = {}
 ) {
@@ -187,9 +186,7 @@ class SshSocksProxy(
         host: String,
         port: Int
     ) {
-        // In fake-IP mode the destination is a synthetic IP; resolve it back to the original domain so the SSH
-        // server performs the real DNS resolution (remote DNS). Falls back to the literal address otherwise.
-        val targetHost = fakeDns?.takeIf { it.isFakeIp(host) }?.lookup(host) ?: host
+        val targetHost = host
 
         val channel: Channel
         try {
@@ -346,25 +343,14 @@ class SshSocksProxy(
         val payload = data.copyOfRange(index, length)
 
         if (destPort != DNS_PORT) {
-            // When transparent UDP is disabled, keep the legacy behavior: only DNS is tunneled, the rest
-            // is dropped. When enabled, all non-DNS UDP (QUIC/HTTP3, games, VoIP, ...) is tunneled over a
-            // per-destination direct-udpip channel. In fake-IP mode the synthetic destination is resolved
-            // back to the original domain so the SSH server performs the real DNS resolution (remote DNS).
             if (nat == null) {
                 return
             }
-            val resolvedHost = fakeDns?.takeIf { it.isFakeIp(destHost) }?.lookup(destHost) ?: destHost
-            nat.forward(packet.socketAddress, header, destHost, resolvedHost, destPort, payload)
+            nat.forward(packet.socketAddress, header, destHost, destHost, destPort, payload)
             return
         }
 
-        // With fake-IP enabled, answer DNS locally (no real query leaves the device); fall back to DNS-over-TCP
-        // when the query cannot be synthesized (e.g. unsupported record types).
-        val response = if (fakeDns != null) {
-            fakeDns.synthesize(payload) ?: resolveDnsOverTcp(destHost, payload)
-        } else {
-            resolveDnsOverTcp(destHost, payload)
-        } ?: return
+        val response = resolveDnsOverTcp(destHost, payload) ?: return
         val reply = ByteArray(header.size + response.size)
         System.arraycopy(header, 0, reply, 0, header.size)
         System.arraycopy(response, 0, reply, header.size, response.size)
